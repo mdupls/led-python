@@ -53,6 +53,9 @@ class NeoPixel:
         print(f"[MockNeoPixel] Pixel {index} set to {color}")
         self.pixels[index] = color
 
+    def __len__(self):
+        return len(self.pixels)
+
     def write(self):
         print(f"[MockNeoPixel] Pixels updated: {self.pixels}")
         for i, color in enumerate(self.pixels):
