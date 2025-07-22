@@ -1,5 +1,7 @@
 # fake_hw.py
 
+import tkinter as tk
+
 class Pin:
     OUT = "OUT"
     IN = "IN"
@@ -30,7 +32,21 @@ class NeoPixel:
         self.pin = pin
         self.n = n
         self.bpp = bpp
-        self.pixels = [(0, 0, 0)] * n
+        if bpp == 3:
+            self.pixels = [(0, 0, 0)] * n
+        else:
+            self.pixels = [(0, 0, 0, 0)] * n  # start off
+        self.window = tk.Tk()
+        self.window.title(f"NeoPixel Strip on Pin {pin}")
+        self.canvas = tk.Canvas(self.window, width=n * 30, height=50, bg="black")
+        self.canvas.pack()
+        self.rects = []
+        for i in range(n):
+            rect = self.canvas.create_rectangle(
+                i * 30, 0, i * 30 + 28, 50, fill="black"
+            )
+            self.rects.append(rect)
+        self.window.update()
         print(f"[MockNeoPixel] Created {n} pixels on pin {pin}")
 
     def __setitem__(self, index, color):
@@ -39,3 +55,55 @@ class NeoPixel:
 
     def write(self):
         print(f"[MockNeoPixel] Pixels updated: {self.pixels}")
+        for i, color in enumerate(self.pixels):
+            if self.bpp == 3:
+                r, g, b = color
+            elif self.bpp == 4:
+                r, g, b, w = color
+                # blend white channel for visualization
+                r = min(255, r + w)
+                g = min(255, g + w)
+                b = min(255, b + w)
+            else:
+                r = g = b = 0
+            hex_color = f"#{r:02x}{g:02x}{b:02x}"
+            self.canvas.itemconfig(self.rects[i], fill=hex_color)
+        self.window.update()
+
+# ===========================
+# Example usage
+# ===========================
+
+    # pin = Pin(17, Pin.OUT)
+    # strip = NeoPixel(17, 30, bpp=4)
+
+    # # Light up in sequence
+    # for i in range(strip.n):
+    #     strip[i] = (0, 0, 255, 50)  # Blue + slight white
+    #     strip.write()
+    #     sleep(0.05)
+
+    # sleep(1)
+
+    # # Rainbow wipe
+    # colors = [
+    #     (255, 0, 0, 0),
+    #     (255, 127, 0, 0),
+    #     (255, 255, 0, 0),
+    #     (0, 255, 0, 0),
+    #     (0, 0, 255, 0),
+    #     (75, 0, 130, 0),
+    #     (148, 0, 211, 0),
+    # ]
+    # for i in range(strip.n):
+    #     strip[i] = colors[i % len(colors)]
+    # strip.write()
+
+    # sleep(2)
+
+    # # Clear
+    # for i in range(strip.n):
+    #     strip[i] = (0, 0, 0, 0)
+    # strip.write()
+
+    # sleep(1)
