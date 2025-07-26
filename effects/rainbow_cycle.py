@@ -5,10 +5,16 @@ rainbow_colors = [(255, 0, 0, 128), (255, 127, 0, 128), (255, 255, 0, 128), (0, 
 class RainbowCycleEffect(BaseEffect):
     def __init__(self):
         super().__init__()
-        self.step = 0
+
+    def initialize(self, strip):
+        super().initialize(strip)
+
+        self.reset()
 
     def update(self):
         for i in range(self.num_pixels):
-            self.pixels[i] = rainbow_colors[(i + self.step) % len(rainbow_colors)]
+            # reverse the index
+            j = i if self.reverse else self.num_pixels - i - 1
+            self.pixels[i] = rainbow_colors[(j + self.step * self.direction) % len(rainbow_colors)]
 
-        self.step = (self.step + 1) % self.num_pixels
+        self.step = (self.step + self.direction) % self.num_pixels

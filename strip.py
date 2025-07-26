@@ -7,9 +7,9 @@ TIM_800 = 1 # 800kHz leds
 RGB_PIXELS = 1 # RGB, 1 led=1 pixel
 
 class Strip:
-    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, direction=1, enabled=False):
+    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, reverse=False, enabled=False):
         self.id = id
-        self.direction = direction
+        self.reverse = reverse
         self.enabled = enabled
         self.pixels = NeoPixel(Pin(pin_num), num_leds, bpp=bpp, timing=timing)
     

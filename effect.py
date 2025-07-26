@@ -6,6 +6,11 @@ class BaseEffect:
         self.strip = strip
         self.pixels = strip.pixels
         self.num_pixels = len(strip.pixels)
+        self.reverse = strip.reverse
+        self.direction = -1 if strip.reverse else 1
+
+    def reset(self):
+        self.step = self.num_pixels - 1 if self.reverse else 0
 
     def update(self):
         raise NotImplementedError

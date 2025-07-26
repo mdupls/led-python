@@ -5,27 +5,43 @@ class WipeInwardEffect(BaseEffect):
     def __init__(self, color_fn=None, color=None):
         super().__init__()
         self.color_fn = color_fn
-        self.color = color if color is not None else color_fn()
-        self.step = 0  # Current step of the wipe
+        self.color = color
+        self._reset = False
 
-    def setStrip(self, strip):
-        super().setStrip(strip)
+    def initialize(self, strip):
+        super().initialize(strip)
+        
+        self.reset()
 
-        self.mid = self.num_pixels // 2
-        self.max_step = self.mid  # How many steps to complete
-    
+    def reset(self):
+        if self.reverse:
+            if self.num_pixels % 2 == 0:
+                self.right = self.num_pixels // 2
+                self.left = self.right - 1
+            else:
+                self.left = self.right = self.num_pixels // 2
+        else:
+            self.left = 0
+            self.right = self.num_pixels - 1
+        
+        if self.color_fn is not None:
+            self.color = self.color_fn()
+
     def update(self):
-        # Light from both ends inward
-        left = self.step
-        right = self.num_pixels - 1 - self.step
+        if self._reset:
+            clear(self.pixels)
+            self.reset()
+            self._reset = False
 
-        self.pixels[left] = self.color
-        self.pixels[right] = self.color
+        self.pixels[self.left] = self.color
+        self.pixels[self.right] = self.color
 
-        self.step += 1
+        self.left += self.direction
+        self.right -= self.direction
 
-        if self.step > self.max_step:
-            clear(self.pixels)  # Clear the strip when done
-            self.step = 0  # Reset step for next run
-            if self.color_fn is not None:
-                self.color = self.color_fn()
+        if self.reverse:
+            if self.left < 0 or self.right >= self.num_pixels:
+                self._reset = True
+        else:
+            if self.left > self.right:
+                self._reset = True
