@@ -2,10 +2,11 @@ from utils import clear, OFF
 from effect import BaseEffect
 
 class WipeInwardEffect(BaseEffect):
-    def __init__(self, color_fn=None, color=None):
+    def __init__(self, color_fn=None, color=None, invert=False):
         super().__init__()
         self.color_fn = color_fn
         self.color = color
+        self.invert = invert
         self._reset = False
 
     def initialize(self, strip):
@@ -14,7 +15,7 @@ class WipeInwardEffect(BaseEffect):
         self.reset()
 
     def reset(self):
-        if self.reverse:
+        if self.invert:
             if self.num_pixels % 2 == 0:
                 self.right = self.num_pixels // 2
                 self.left = self.right - 1
@@ -39,7 +40,7 @@ class WipeInwardEffect(BaseEffect):
         self.left += self.direction
         self.right -= self.direction
 
-        if self.reverse:
+        if self.invert:
             if self.left < 0 or self.right >= self.num_pixels:
                 self._reset = True
         else:

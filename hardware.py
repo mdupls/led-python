@@ -15,3 +15,4 @@ Pin = hw.Pin
 NeoPixel = hw.NeoPixel
 Scheduler = hw.Scheduler
 Timer = hw.Timer
+factory = hw.create_factory

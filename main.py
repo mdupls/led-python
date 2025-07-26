@@ -1,7 +1,7 @@
 # main.py
 
 # Imports
-from hardware import Pin, Scheduler, Timer
+from hardware import Pin, factory
 from utils import rand_color
 from strip import Strip, RGBW_BPP, TIM_800
 from controller import Controller
@@ -46,24 +46,34 @@ crs_dv = Pin(27, Pin.OUT, value=0)
 emac_clk = Pin(0, Pin.OUT, value=0)
 
 # Create neopixel objects (Def timing = 800kHz)
-strip1 = Strip("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=False, reverse=False) #276
-# strip2 = Strip("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, enabled=False) #480
-# strip3 = Strip("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, enabled=False)
-# strip4 = Strip("ch4", pin_num=4, num_leds=20, bpp=RGBW_BPP, timing=TIM_800, enabled=True) #432
+strip1 = Strip("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=False, rotation=90) #276
+strip2 = Strip("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=False) #480
+strip3 = Strip("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=False)
+strip4 = Strip("ch4", pin_num=4, num_leds=20, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=False) #432
 
-window = strip1.pixels.window
-scheduler = Scheduler(window, 50)
-timer = Timer(window)
+(renderer, createTimer, createScheduler) = factory()
+
+timer = createTimer()
+
+if renderer is not None:
+    renderer.add(strip1, x=0, y=0)
+    renderer.add(strip2, x=40, y=0)
+    renderer.add(strip3, x=40, y=40)
+    renderer.add(strip4, x=40, y=80)
 
 def main():    
     # try:
     #     while True:
 
-    # scheduler.start(lambda: wipe(ch1_np, 1, color))
-    # scheduler.after(3000, lambda: wipe_solid(scheduler, ch1_np, 2, color))
+    controllers = []
+    controllers.append(Controller(strip1, scheduler=createScheduler()))
+    controllers.append(Controller(strip2, scheduler=createScheduler()))
+    controllers.append(Controller(strip3, scheduler=createScheduler()))
+    controllers.append(Controller(strip4, scheduler=createScheduler()))
 
-    leds = Controller(strip1, scheduler=scheduler)
-    leds.start()
+    for i in range(len(controllers)):
+        controllers[i].set_effect(FadeEffect(color_fn=lambda: rand_color(w=0)))
+        controllers[i].start()
 
     # leds.set_effect(SolidEffect())
     # leds.set_effect(SolidEffect(color=rand_color(w=0)))
@@ -76,7 +86,7 @@ def main():
     # leds.set_effect(WipeRandomEffect(color_fn=lambda: rand_color(w=0)))
     # leds.set_effect(WipeSolidEffect(color=rand_color(w=0)))
     # leds.set_effect(WipeSolidEffect(color_fn=lambda: rand_color(w=0)))
-    leds.set_effect(RainbowWipeEffect())
+    # leds.set_effect(RainbowWipeEffect())
     # leds.set_effect(RainbowCycleEffect())
     # leds.set_effect(WipeInwardEffect(color=rand_color(w=0)))
     # leds.set_effect(WipeInwardEffect(color_fn=lambda: rand_color(w=0)))
@@ -91,8 +101,8 @@ def main():
     # timer.after(5000, lambda: leds.set_speed(10))
     # timer.after(10000, lambda: leds.set_pattern(wipe_solid))
 
-    if window is not None:
-        window.mainloop()
+    if renderer is not None:
+        renderer.window.mainloop()
             
     # except KeyboardInterrupt:
     #     print("\nCtrl-C pressed")
