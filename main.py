@@ -1,10 +1,21 @@
 # main.py
 
 # Imports
+from hardware import Pin, NeoPixel, Scheduler, Timer
+from utils import rand_color
 
-from time import sleep
-from hardware import Pin, NeoPixel
-from random import randrange, randint
+# Effects imports
+from effects.solid import SolidEffect
+from effects.fade import FadeEffect
+from effects.wipe import WipeEffect
+from effects.wipe_solid import WipeSolidEffect
+from effects.wipe_inward import WipeInwardEffect
+from effects.rainbow_wipe import RainbowWipeEffect
+from effects.rainbow_cycle import RainbowCycleEffect
+from effects.bounce import BounceEffect
+from effects.sparkle import SparkleEffect
+from effects.fancy import FancyEffect
+from effects.spectrum import SpectrumEffect
 
 # Constants
 RGB_LED_TYPE = 0
@@ -14,13 +25,10 @@ RGBW_BPP = 4  # RGBW LEDs
 TIM_400 = 0 # 400kHz leds
 TIM_800 = 1 # 800kHz leds
 RGB_PIXELS = 1 # RGB, 1 led=1 pixel
-DELAY = 0.001
-OFF = (0, 0, 0, 0)
 
 # Globals
 color = (255,0,0,0) # Red
 cycles = 1
-rainbow_colors = [(255, 0, 0, 128), (255, 127, 0, 128), (255, 255, 0, 128), (0, 255, 0, 128), (0, 0, 255, 128), (75, 0, 130, 128), (148, 0, 211, 128)]
 rgb_colors = [ (0, 255, 0, 0), (255, 0, 0, 0), (0, 0, 255, 0)] # Green, red and blue in list
 
 # Create input/output pin objects
@@ -42,7 +50,6 @@ emac_clk = Pin(0, Pin.OUT, value=0)
 class MyNeoPixel:
     def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, enabled=False):
         self.id = id
-        self.zero_data = [OFF] * num_leds
         self.enabled = enabled
         self.np = NeoPixel(Pin(pin_num), num_leds, bpp=bpp, timing=timing)
     
@@ -50,440 +57,92 @@ class MyNeoPixel:
         return self.id
     
 # Create neopixel objects (Def timing = 800kHz)
-ch1_np = MyNeoPixel("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=True) #276
-ch2_np = MyNeoPixel("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, enabled=True) #480
-ch3_np = MyNeoPixel("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, enabled=True)
+ch1_np = MyNeoPixel("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=False) #276
+ch2_np = MyNeoPixel("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, enabled=False) #480
+ch3_np = MyNeoPixel("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, enabled=False)
 ch4_np = MyNeoPixel("ch4", pin_num=4, num_leds=20, bpp=RGBW_BPP, timing=TIM_800, enabled=True) #432
 
-def zero_data(np):
-    return [OFF] * len(np)
-    
-#Convert HSV to RGB (based on colorsys.py).
-def hsv_to_rgb(h, s, v, w):
-    """
-        Args: h (float): Hue 0 to 1.
-              s (float): Saturation 0 to 1.
-              v (float): Value 0 to 1 (Brightness).
-    """
-    if s == 0.0:   
-        return v, v, v, w
-    
-    i = int(h * 6.0)
-    f = (h * 6.0) - i
-    p = v * (1.0 - s)
-    q = v * (1.0 - s * f)
-    t = v * (1.0 - s * (1.0 - f))
-    i = i % 6
-        
-    v = int(v * 255)
-    t = int(t * 255)
-    p = int(p * 255)
-    q = int(q * 255)
+timer = Scheduler(ch1_np.np.window, 50)
 
-    if i == 0:
-        return v, t, p, w
-    if i == 1:
-        return q, v, p, w
-    if i == 2:
-        return p, v, t, w
-    if i == 3:
-        return p, q, v, w
-    if i == 4:
-        return t, p, v, w
-    if i == 5:
-        return v, p, q, w
+class LEDController:
+    def __init__(self, ch, timer):
+        self.timer = timer
+        self.position = 0
+        self.direction = 1  # 1 for right, -1 for left
+        self.effect = None
+        self.ch = ch
 
-# Create random tupple
-def rand_color(w=None):
-    r = randrange(0, 255)
-    g = randrange(0, 255)
-    b = randrange(0, 255)
-    if w is None:
-        w = randrange(0, 128)
-    else:
-        w = 0
-    return  (r,g,b,w)
+    def start(self):
+        self.timer.start(self._update)
 
-# Clear all LEDs
-def clear(ch):
-    #print("Clear")
-    np = ch.np
-    for i in range(len(np)):
-        np[i] = ch.zero_data[i]
-        
-def solid_color(ch, duration, color):
-    np = ch.np
-    for j in range(len(np)):
-        np[j] = color
-    np.write()
-    sleep(duration)
-    clear(ch)
-    np.write()
-    print('          {} cycles done'.format(cycles))
-    
-def solid_random_color(ch, duration):
-    solid_color(ch, duration, rand_color(w=0))
-    print('          {} cycles done'.format(cycles))
+    def stop(self):
+        self.timer.stop()
 
-# 1. Cycle one pixel at a time, all other pixels off, single color
-def cycle_single_color(ch, cycles, color):
-    np = ch.np
-    n = len(np)
-    for i in range(cycles):  # Sets the number of cycles
-        for j in range(n):  # Iterates through number of pixels
-            np[j - 1] = OFF
-            np[j] = color # Set color 
-            np.write() 
-            sleep(DELAY) # Delay between pixels
-    clear(ch)
-    np.write()
-    print('          {} cycles done'.format(cycles))
+    def _update(self):
+        # Run current pattern
+        if self.effect is not None:
+            self.effect.update()
+            self.ch.np.write()
 
-# 2. Cycle one pixel at a time, all other pixels off, reg, green, blue sequence
-def cycle_rgb_color(ch, cycles):
-    c = 0
-    np = ch.np
-    n = len(np)
-    for i in range(cycles):  # Sets the number of cycles     
-        for j in range(n):  # Iterates through number of pixels
-            np[j - 1] = OFF
-            np[j] = rgb_colors[c] # Set color
-            np.write()
-            sleep(DELAY)
-            if c == 2:
-                c = 0
-            else:
-                c += 1
-    clear(ch)
-    np.write()
-    print('          {} cycles done'.format(cycles))
-    
-# 3. Cycle one pixel at a time, all other pixels off, random color
-def cycle_random_color(ch, cycles):
-    np = ch.np
-    n = len(np)
-    for i in range(cycles):  # Sets the number of cycles
-        for j in range(n):  # Iterates through number of pixels
-            np[j - 1] = OFF
-            np[j] = rand_color() # Select random color
-            np.write()
-            sleep(DELAY)
-    clear(ch)
-    np.write()
-    print('          {} cycles done'.format(cycles))
+    def set_speed(self, speed_ms):
+        self.timer.interval_ms = speed_ms
+        # Restart timer to apply new period
+        self.stop()
+        self.start()
 
-# 4. Cycle continious, not turning off previous pixels single color
-def cycle_cont_single(ch, cycles, color):
-    np = ch.np
-    n = len(np)
-    for i in range(cycles):  # Sets the number of cycles
-        for j in range(n):  # Iterates through number of pixels
-            np[j] = color # Set color 
-            np.write()
-            sleep(DELAY)
-        clear(ch)
-        np.write()
-    clear(ch)
-    np.write()
-    print('          {} cycles done'.format(cycles))
-    
-# 5. Cycle continious, not turning off previous pixels
-def cycle_cont_random(ch, cycles):
-    np = ch.np
-    n = len(np)
-    for i in range(cycles):  # Sets the number of cycles
-        for j in range(n):  # Iterates through number of pixels
-            np[j] = rand_color() # Select random color
-            np.write()
-            sleep(DELAY)
-        clear(ch)
-        np.write()
-    clear(ch)
-    np.write()
-    print('          {} cycles done'.format(cycles))
-    
-# 6. Cycle continious, not turning off previous pixels, red, green and blue sequence
-def cycle_cont_rgb(ch, cycles):
-    c = 0
-    np = ch.np
-    n = len(np)
-    for i in range(cycles):  # Sets the number of cycles     
-        for j in range(n):  # Iterates through number of pixels
-            np[j] = rgb_colors[c] # Set color
-            np.write()
-            sleep(DELAY) 
-            if c == 2:
-                c = 0
-            else:
-                c += 1
-        clear(ch)
-        np.write()
-    clear(ch)
-    np.write()
-    print('          {} cycles done'.format(cycles))   
-         
-# 7. Bounce LEDs
-def bounce(ch, cycles):
-    np = ch.np
-    n = len(np)
-    for i in range(cycles * 2 * n):
-        for j in range(n):
-            np[j] = (0, 0, 128, 0)
-        if (i // n) % 2 == 0:
-            np[i % n] = OFF
-        else:
-            np[n - 1 - (i % n)] = OFF
-        np.write()
-        sleep(DELAY)
-    clear(ch)
-    np.write()
-    print('          Bounce done')
-    
-# 8. Fade LEDs in/out
-def fade_in_out(ch, cycles):
-    np = ch.np
-    n = len(np)
-    for i in range(0, cycles * 2 * 256, 8):
-        for j in range(n):
-            if (i // 256) % 2 == 0:
-                val = i & 0xff
-            else:
-                val = 255 - (i & 0xff)
-            np[j] = (val, 0, 0, 0)
-        np.write()
-        sleep(DELAY)
-    clear(ch)
-    np.write()
-    print('          Fade done') 
-    
-# 9. Fancy show
-def fancy_show(ch, cycles):
-    np = ch.np
-    n = len(np)
-    for i in range(cycles * n):
-        sleep(DELAY)
-        np[(i - 1) % n] = OFF
-        np[i % n] = rand_color()
-        np.write()
-        sleep(DELAY)
-    clear(ch)
-    np.write()
-    print('          Fancy done')
-    
-# 10. Scroll thru Spectrum
-def spectrum(ch, cycles):
-    np = ch.np
-    n = len(np)
-    #print("Loop 1")
-    for i in range(cycles):  # Sets the number of cycles before exit
-        for j in range(n):  # Iterates thru pixels 'n'
-            for k in range(5):  # Change the pixel HSV 5 times
-                           
-                hue = randint(50, 255)/255.0       
-                sat = randint(50, 255)/255.0
-                brt = randint(50, 255)/2048.0
-            
-                col = hsv_to_rgb(hue, sat,  brt, 0)   # np[0] refers to the first LED, 0 in this case. Hue, saturation and brightness
-                #print('Col = ', col)
-                #print('1: j % n = ', j % n)
-                np[j % n] = col  # np[i%n] refers to the pixel to be written
-                np.write()  # Set pixel to specified color
-                sleep(DELAY)
-            sleep(DELAY)
-        sleep(DELAY)
-    
-    #print("Loop 2")
-    for l in range(cycles):  # Sets the number of cycles before exit
-        for m in range(n):  # Iterates thru pixels 'n'
-            for r in range(5):  # Change the pixel HSV 5 times
-            
-                hue = randint(50, 255)/255.0       
-                sat = randint(50, 255)/255.0
-                brt = randint(50, 255)/2048.0
-            
-                col = hsv_to_rgb(hue, sat,  brt, 0)   # np[0] refers to the first LED, 0 in this case. Hue, saturation and brightness
-                #print('Col = ', col)
-                #print('2: m % n = ', (n - 1) - (m % n))
-                np[(n - 1) - (m % n)] = col  # np[i%n] refers to the pixel to be written, pixels reversed
-                np.write()  # Set pixel to specified color
-                sleep(DELAY)
-            sleep(DELAY)
-        sleep(DELAY)
-    clear(ch)
-    np.write()
-    print('          Spectrum done') 
-    
-# 11. Rainbow cycle
-def rainbow_cycle(ch, cycles):
-    np = ch.np
-    n = len(np)
-    for i in range(len(rainbow_colors)):
-        for j in range(n):
-            np[j] = rainbow_colors[(i + j) % len(rainbow_colors)]
-            np.write()
-        sleep(DELAY)
-    clear(ch)
-    np.write()
-    print('          Rainbow done')
-  
+    def set_effect(self, effect):
+        effect.setStrip(self.ch.np)
+        self.effect = effect
+
+mysleep = Timer(ch1_np.np.window)
+
 def main():    
-    try:
-        while True:
+    # try:
+    #     while True:
+
+    # scheduler.start(lambda: wipe(ch1_np, 1, color))
+    # scheduler.after(3000, lambda: wipe_solid(scheduler, ch1_np, 2, color))
+
+    leds = LEDController(ch1_np, timer=timer)
+    leds.start()
+
+    # leds.set_effect(SolidEffect())
+    # leds.set_effect(SolidEffect(color=(255, 0, 0, 0)))
+    # leds.set_effect(FadeEffect(color=rand_color(w=0)))
+    leds.set_effect(FadeEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(WipeEffect(color=rand_color(w=0)))
+    # leds.set_effect(WipeEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(WipeSolidEffect(color=rand_color(w=0)))
+    # leds.set_effect(WipeSolidEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(RainbowWipeEffect())
+    # leds.set_effect(RainbowCycleEffect())
+    # leds.set_effect(WipeInwardEffect(color=rand_color(w=0)))
+    # leds.set_effect(WipeInwardEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(BounceEffect(color=rand_color(w=0)))
+    # leds.set_effect(BounceEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(SparkleEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(SparkleEffect(color=(255, 0, 0, 0)))
+    # leds.set_effect(FancyEffect())
+    # leds.set_effect(SpectrumEffect())
+
+    # leds.set_speed(50)
+
+    # mysleep.after(5000, lambda: leds.set_speed(10))
+    # mysleep.after(10000, lambda: leds.set_pattern(wipe_solid))
+
+    ch1_np.np.window.mainloop()
             
-            print()
-            if ch1_np.enabled:
-                solid_color(ch1_np, 2, color)
-            if ch2_np.enabled:
-                solid_color(ch2_np, 2, color)
-            if ch3_np.enabled:
-                solid_color(ch3_np, 2, color)
-            if ch4_np.enabled:
-                solid_color(ch4_np, 2, color)
-            sleep(2)
-            
-            print()
-            if ch1_np.enabled:
-                solid_random_color(ch1_np, 2)
-            if ch2_np.enabled:
-                solid_random_color(ch2_np, 2)
-            if ch3_np.enabled:
-                solid_random_color(ch3_np, 2)
-            if ch4_np.enabled:
-                solid_random_color(ch4_np, 2)
-            sleep(2)
-            
-            print('1: Single color')
-            if ch1_np.enabled:
-                cycle_single_color(ch1_np, cycles, color)
-            if ch2_np.enabled:
-                cycle_single_color(ch2_np, cycles, color)
-            if ch3_np.enabled:
-                cycle_single_color(ch3_np, cycles, color)
-            if ch4_np.enabled:
-                cycle_single_color(ch4_np, cycles, color)
-            sleep(2)
-            
-            print('2: Single RGB sequence')
-            if ch1_np.enabled:
-                cycle_rgb_color(ch1_np, cycles)
-            if ch2_np.enabled:
-                cycle_rgb_color(ch2_np, cycles)
-            if ch3_np.enabled:
-                cycle_rgb_color(ch3_np, cycles)
-            if ch4_np.enabled:
-                cycle_rgb_color(ch4_np, cycles)
-            sleep(2)
-            
-            print('3: Single random colors')
-            if ch1_np.enabled:
-                cycle_random_color(ch1_np, cycles)
-            if ch2_np.enabled:
-                cycle_random_color(ch2_np, cycles)
-            if ch3_np.enabled:
-                cycle_random_color(ch3_np, cycles)
-            if ch4_np.enabled:
-                cycle_random_color(ch4_np, cycles)
-            sleep(2)
-            
-            print('4: Continuous single color')
-            if ch1_np.enabled:
-                cycle_cont_single(ch1_np, cycles, color)
-            if ch2_np.enabled:
-                cycle_cont_single(ch2_np, cycles, color)
-            if ch3_np.enabled:
-                cycle_cont_single(ch3_np, cycles, color)
-            if ch4_np.enabled:
-                cycle_cont_single(ch4_np, cycles, color)
-            sleep(2)
-             
-            print('5: Continuous random colors')
-            if ch1_np.enabled:
-                cycle_cont_random(ch1_np, cycles)
-            if ch2_np.enabled:
-                cycle_cont_random(ch2_np, cycles)
-            if ch3_np.enabled:
-                cycle_cont_random(ch3_np, cycles)
-            if ch4_np.enabled:
-                cycle_cont_random(ch4_np, cycles)
-            sleep(2)
-           
-            print('6: Continuous RGB')
-            if ch1_np.enabled:
-                cycle_cont_rgb(ch1_np, cycles)
-            if ch2_np.enabled:
-                cycle_cont_rgb(ch2_np, cycles)
-            if ch3_np.enabled:
-                cycle_cont_rgb(ch3_np, cycles)
-            if ch4_np.enabled:
-                cycle_cont_rgb(ch4_np, cycles)
-            sleep(2)
-            
-            print('7: Bounce')
-            if ch1_np.enabled:
-                bounce(ch1_np, cycles)
-            if ch2_np.enabled:
-                bounce(ch2_np, cycles)
-            if ch3_np.enabled:
-                bounce(ch3_np, cycles)
-            if ch4_np.enabled:
-                bounce(ch4_np, cycles)
-            sleep(2)
-            
-            print('8: Fade')
-            if ch1_np.enabled:
-                fade_in_out(ch1_np, cycles)
-            if ch2_np.enabled:
-                fade_in_out(ch2_np, cycles)
-            if ch3_np.enabled:
-                fade_in_out(ch3_np, cycles)
-            if ch4_np.enabled:
-                fade_in_out(ch4_np, cycles)
-            sleep(2)
-            
-            print('9: Fancy show')
-            if ch1_np.enabled:
-                fancy_show(ch1_np, cycles)
-            if ch2_np.enabled:
-                fancy_show(ch2_np, cycles)
-            if ch3_np.enabled:
-                fancy_show(ch3_np, cycles)
-            if ch4_np.enabled:
-                fancy_show(ch4_np, cycles)
-            sleep(2)
-            
-            print('10: Scroll through spectrum')
-            if ch1_np.enabled:
-                spectrum(ch1_np, cycles)
-            if ch2_np.enabled:
-                spectrum(ch2_np, cycles)
-            if ch3_np.enabled:
-                spectrum(ch3_np, cycles)
-            if ch4_np.enabled:
-                spectrum(ch4_np, cycles)
-            sleep(2)
-            
-            print('11: Flash rainbow')
-            if ch1_np.enabled:
-                rainbow_cycle(ch1_np, cycles)
-            if ch2_np.enabled:
-                rainbow_cycle(ch2_np, cycles)
-            if ch3_np.enabled:
-                rainbow_cycle(ch3_np, cycles)
-            if ch4_np.enabled:
-                rainbow_cycle(ch4_np, cycles)
-            sleep(2)
-            
-    except KeyboardInterrupt:
-        print("\nCtrl-C pressed")
-    finally:
-        if ch1_np.enabled:
-            clear(ch1_np)
-        if ch2_np.enabled:
-            clear(ch2_np)
-        if ch3_np.enabled:
-            clear(ch3_np)
-        if ch4_np.enabled:
-            clear(ch4_np)
-        print('Strips turned off and exiting...')
+    # except KeyboardInterrupt:
+    #     print("\nCtrl-C pressed")
+    # finally:
+    #     if ch1_np.enabled:
+    #         clear(ch1_np)
+    #     if ch2_np.enabled:
+    #         clear(ch2_np)
+    #     if ch3_np.enabled:
+    #         clear(ch3_np)
+    #     if ch4_np.enabled:
+    #         clear(ch4_np)
+    #     print('Strips turned off and exiting...')
            
 main()

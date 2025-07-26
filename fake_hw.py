@@ -1,6 +1,7 @@
 # fake_hw.py
 
 import tkinter as tk
+from scheduler import Scheduler, Timer
 
 class Pin:
     OUT = "OUT"
@@ -10,7 +11,7 @@ class Pin:
         self.pin_num = pin_num
         self.mode = mode
         self.value = value
-        print(f"[MockPin] Pin {pin_num} initialized as {mode} with value {value}")
+        # print(f"[MockPin] Pin {pin_num} initialized as {mode} with value {value}")
 
     def on(self):
         print(f"[MockPin] Pin {self.pin_num} ON")
@@ -47,17 +48,17 @@ class NeoPixel:
             )
             self.rects.append(rect)
         self.window.update()
-        print(f"[MockNeoPixel] Created {n} pixels on pin {pin}")
+        # print(f"[MockNeoPixel] Created {n} pixels on pin {pin}")
 
     def __setitem__(self, index, color):
-        print(f"[MockNeoPixel] Pixel {index} set to {color}")
+        # print(f"[MockNeoPixel] Pixel {index} set to {color}")
         self.pixels[index] = color
 
     def __len__(self):
         return len(self.pixels)
 
     def write(self):
-        print(f"[MockNeoPixel] Pixels updated: {self.pixels}")
+        # print(f"[MockNeoPixel] Pixels updated: {self.pixels}")
         for i, color in enumerate(self.pixels):
             if self.bpp == 3:
                 r, g, b = color
@@ -72,3 +73,30 @@ class NeoPixel:
             hex_color = f"#{r:02x}{g:02x}{b:02x}"
             self.canvas.itemconfig(self.rects[i], fill=hex_color)
         self.window.update()
+
+class CustomTimer(Timer):
+    def __init__(self, root):
+        self.root = root
+
+    def after(self, delay_ms, callback):
+        self.root.after(delay_ms, callback)
+    
+
+class CustomScheduler(Scheduler):
+    def __init__(self, root, interval_ms):
+        self.root = root
+        self.interval_ms = interval_ms
+        self._job = None
+
+    def _tick(self, callback):
+        callback()
+        self._job = self.root.after(self.interval_ms, self._tick, callback)
+
+    def start(self, callback):
+        if self._job is None:
+            self._tick(callback)
+
+    def stop(self):
+        if self._job:
+            self.root.after_cancel(self._job)
+            self._job = None
