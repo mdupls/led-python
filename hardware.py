@@ -13,5 +13,5 @@ else:
 
 Pin = hw.Pin
 NeoPixel = hw.NeoPixel
-Scheduler = hw.CustomScheduler
-Timer = hw.CustomTimer
+Scheduler = hw.Scheduler
+Timer = hw.Timer

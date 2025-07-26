@@ -8,7 +8,7 @@ class SolidEffect(BaseEffect):
 
     def update(self):
         for i in range(self.num_pixels):
-            self.strip[i] = self.color
+            self.pixels[i] = self.color
 
     def next_delay_ms(self) -> int:
         return -1 # No refresh needed, solid color effect does not change

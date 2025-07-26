@@ -9,6 +9,6 @@ class RainbowCycleEffect(BaseEffect):
 
     def update(self):
         for i in range(self.num_pixels):
-            self.strip[i] = rainbow_colors[(i + self.step) % len(rainbow_colors)]
+            self.pixels[i] = rainbow_colors[(i + self.step) % len(rainbow_colors)]
 
         self.step = (self.step + 1) % self.num_pixels

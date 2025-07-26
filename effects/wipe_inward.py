@@ -19,13 +19,13 @@ class WipeInwardEffect(BaseEffect):
         left = self.step
         right = self.num_pixels - 1 - self.step
 
-        self.strip[left] = self.color
-        self.strip[right] = self.color
+        self.pixels[left] = self.color
+        self.pixels[right] = self.color
 
         self.step += 1
 
         if self.step > self.max_step:
-            clear(self.strip)  # Clear the strip when done
+            clear(self.pixels)  # Clear the strip when done
             self.step = 0  # Reset step for next run
             if self.color_fn is not None:
                 self.color = self.color_fn()

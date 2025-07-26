@@ -10,8 +10,8 @@ class BounceEffect(BaseEffect):
         self.direction = 1
 
     def update(self):
-        self.strip[(self.step - self.direction) % self.num_pixels] = OFF  # Clear previous pixel
-        self.strip[self.step] = self.color
+        self.pixels[(self.step - self.direction) % self.num_pixels] = OFF  # Clear previous pixel
+        self.pixels[self.step] = self.color
 
         # Move the LED
         self.step += self.direction

@@ -11,6 +11,6 @@ class SparkleEffect(BaseEffect):
     def update(self):
         for i in range(self.num_pixels):
             if random.getrandbits(3) == 0:
-                self.strip[i] = self.color_fn() if self.color_fn is not None else self.color
+                self.pixels[i] = self.color_fn() if self.color_fn is not None else self.color
             else:
-                self.strip[i] = OFF
+                self.pixels[i] = OFF

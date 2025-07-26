@@ -1,8 +1,10 @@
 # main.py
 
 # Imports
-from hardware import Pin, NeoPixel, Scheduler, Timer
+from hardware import Pin, Scheduler, Timer
 from utils import rand_color
+from strip import Strip, RGBW_BPP, TIM_800
+from controller import Controller
 
 # Effects imports
 from effects.solid import SolidEffect
@@ -20,11 +22,6 @@ from effects.spectrum import SpectrumEffect
 # Constants
 RGB_LED_TYPE = 0
 RGBW_LED_TYPE = 1
-RGB_BPP = 3 # RGB leds
-RGBW_BPP = 4  # RGBW LEDs
-TIM_400 = 0 # 400kHz leds
-TIM_800 = 1 # 800kHz leds
-RGB_PIXELS = 1 # RGB, 1 led=1 pixel
 
 # Globals
 color = (255,0,0,0) # Red
@@ -47,54 +44,15 @@ mdio =  Pin(18, Pin.IN)
 crs_dv = Pin(27, Pin.OUT, value=0)
 emac_clk = Pin(0, Pin.OUT, value=0)
 
-class MyNeoPixel:
-    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, enabled=False):
-        self.id = id
-        self.enabled = enabled
-        self.np = NeoPixel(Pin(pin_num), num_leds, bpp=bpp, timing=timing)
-    
-    def get_id(self):
-        return self.id
-    
 # Create neopixel objects (Def timing = 800kHz)
-ch1_np = MyNeoPixel("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=False) #276
-ch2_np = MyNeoPixel("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, enabled=False) #480
-ch3_np = MyNeoPixel("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, enabled=False)
-ch4_np = MyNeoPixel("ch4", pin_num=4, num_leds=20, bpp=RGBW_BPP, timing=TIM_800, enabled=True) #432
+strip1 = Strip("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=False) #276
+# strip2 = Strip("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, enabled=False) #480
+# strip3 = Strip("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, enabled=False)
+# strip4 = Strip("ch4", pin_num=4, num_leds=20, bpp=RGBW_BPP, timing=TIM_800, enabled=True) #432
 
-timer = Scheduler(ch1_np.np.window, 50)
-
-class LEDController:
-    def __init__(self, ch, timer):
-        self.timer = timer
-        self.position = 0
-        self.direction = 1  # 1 for right, -1 for left
-        self.effect = None
-        self.ch = ch
-
-    def start(self):
-        self.timer.start(self._update)
-
-    def stop(self):
-        self.timer.stop()
-
-    def _update(self):
-        # Run current pattern
-        if self.effect is not None:
-            self.effect.update()
-            self.ch.np.write()
-
-    def set_speed(self, speed_ms):
-        self.timer.interval_ms = speed_ms
-        # Restart timer to apply new period
-        self.stop()
-        self.start()
-
-    def set_effect(self, effect):
-        effect.setStrip(self.ch.np)
-        self.effect = effect
-
-mysleep = Timer(ch1_np.np.window)
+window = strip1.pixels.window
+scheduler = Scheduler(window, 50)
+timer = Timer(window)
 
 def main():    
     # try:
@@ -103,7 +61,7 @@ def main():
     # scheduler.start(lambda: wipe(ch1_np, 1, color))
     # scheduler.after(3000, lambda: wipe_solid(scheduler, ch1_np, 2, color))
 
-    leds = LEDController(ch1_np, timer=timer)
+    leds = Controller(strip1, scheduler=scheduler)
     leds.start()
 
     # leds.set_effect(SolidEffect())
@@ -127,22 +85,17 @@ def main():
 
     # leds.set_speed(50)
 
-    # mysleep.after(5000, lambda: leds.set_speed(10))
-    # mysleep.after(10000, lambda: leds.set_pattern(wipe_solid))
+    # timer.after(5000, lambda: leds.set_speed(10))
+    # timer.after(10000, lambda: leds.set_pattern(wipe_solid))
 
-    ch1_np.np.window.mainloop()
+    if window is not None:
+        window.mainloop()
             
     # except KeyboardInterrupt:
     #     print("\nCtrl-C pressed")
     # finally:
     #     if ch1_np.enabled:
     #         clear(ch1_np)
-    #     if ch2_np.enabled:
-    #         clear(ch2_np)
-    #     if ch3_np.enabled:
-    #         clear(ch3_np)
-    #     if ch4_np.enabled:
-    #         clear(ch4_np)
     #     print('Strips turned off and exiting...')
            
 main()

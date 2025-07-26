@@ -1,11 +1,11 @@
 class BaseEffect:
     def __init__(self):
         self.strip = None
-        self.num_pixels = 0
 
-    def setStrip(self, strip):
+    def initialize(self, strip):
         self.strip = strip
-        self.num_pixels = len(strip)
+        self.pixels = strip.pixels
+        self.num_pixels = len(strip.pixels)
 
     def update(self):
         raise NotImplementedError

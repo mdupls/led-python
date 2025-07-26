@@ -1,7 +1,7 @@
 # fake_hw.py
 
 import tkinter as tk
-from scheduler import Scheduler, Timer
+from scheduler import Scheduler as SchedulerInterface, Timer as TimerInterface
 
 class Pin:
     OUT = "OUT"
@@ -74,15 +74,14 @@ class NeoPixel:
             self.canvas.itemconfig(self.rects[i], fill=hex_color)
         self.window.update()
 
-class CustomTimer(Timer):
+class Timer(TimerInterface):
     def __init__(self, root):
         self.root = root
 
     def after(self, delay_ms, callback):
         self.root.after(delay_ms, callback)
     
-
-class CustomScheduler(Scheduler):
+class Scheduler(SchedulerInterface):
     def __init__(self, root, interval_ms):
         self.root = root
         self.interval_ms = interval_ms

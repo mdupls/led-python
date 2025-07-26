@@ -14,5 +14,5 @@ class RainbowWipeEffect(BaseEffect):
 
     def update(self):
         for i in range(self.num_pixels):
-            self.strip[i] = self.wheel((i + self.step) % 256)
+            self.pixels[i] = self.wheel((i + self.step) % 256)
         self.step = (self.step + 1) % 256

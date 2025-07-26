@@ -13,4 +13,4 @@ class SpectrumEffect(BaseEffect):
             brt = randint(0, 255)/255.0
         
             col = hsv_to_rgb(hue, sat, brt, 0)
-            self.strip[i] = col
+            self.pixels[i] = col

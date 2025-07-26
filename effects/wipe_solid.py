@@ -12,13 +12,13 @@ class WipeSolidEffect(BaseEffect):
 
     def update(self):
         if self.reset:
-            clear(self.strip)
+            clear(self.pixels)
             self.reset = False
             self.step = 0
             if self.color_fn is not None:
                 self.color = self.color_fn()
 
-        self.strip[self.step] = self.color
+        self.pixels[self.step] = self.color
 
         # Move the LED
         self.step += self.direction

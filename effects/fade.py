@@ -20,7 +20,7 @@ class FadeEffect(BaseEffect):
         # Scale base color by current brightness
         scaled = self.scale_color(self.color, self.brightness)
         for i in range(self.num_pixels):
-            self.strip[i] = scaled
+            self.pixels[i] = scaled
 
         # Update brightness
         self.brightness += self.step * self.direction
