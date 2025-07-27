@@ -1,7 +1,7 @@
 class Controller:
     def __init__(self, strip, scheduler):
         self.scheduler = scheduler
-        self.effect = None
+        self.effects = []
         self.strip = strip
 
     def start(self):
@@ -12,9 +12,10 @@ class Controller:
 
     def _update(self):
         # Run current pattern
-        if self.effect is not None:
-            self.effect.update()
-            self.strip.pixels.write()
+        for i in range(len(self.effects)):
+            self.effects[i].update()
+
+        self.strip.pixels.write()
 
     def set_speed(self, speed_ms):
         self.scheduler.interval_ms = speed_ms
@@ -22,6 +23,7 @@ class Controller:
         self.stop()
         self.start()
 
-    def set_effect(self, effect):
-        effect.initialize(self.strip)
-        self.effect = effect
+    def set_effect_fn(self, effect_fn, **kwargs):
+        self.effects = []
+        for i in range(len(self.strip.segments)):
+            self.effects.append(effect_fn(self.strip.pixels, self.strip.segments[i], **kwargs))

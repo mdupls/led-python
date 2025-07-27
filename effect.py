@@ -1,16 +1,15 @@
 class BaseEffect:
-    def __init__(self):
-        self.strip = None
-
-    def initialize(self, strip):
-        self.strip = strip
-        self.pixels = strip.pixels
-        self.num_pixels = len(strip.pixels)
-        self.reverse = strip.reverse
-        self.direction = -1 if strip.reverse else 1
+    def __init__(self, pixels, segment):
+        self.pixels = pixels
+        self.segment = segment
+        self.start = segment.start
+        self.end = self.start + segment.length - 1
+        self.length = segment.length
+        self.reverse = segment.reverse
+        self.direction = -1 if self.reverse else 1
 
     def reset(self):
-        self.step = self.num_pixels - 1 if self.reverse else 0
+        self.step = self.end if self.reverse else self.start
 
     def update(self):
         raise NotImplementedError

@@ -1,8 +1,8 @@
 from effect import BaseEffect
 
 class FadeEffect(BaseEffect):
-    def __init__(self, color_fn=None, color=None, fade_in=True):
-        super().__init__()
+    def __init__(self, pixels, segment, color_fn=None, color=None, fade_in=True):
+        super().__init__(pixels, segment)
         self.color_fn = color_fn
         self.color = color if color is not None else color_fn()
         self.brightness = 0 if fade_in else 255
@@ -12,7 +12,7 @@ class FadeEffect(BaseEffect):
     def update(self):
         # Scale base color by current brightness
         scaled = self._scale_color(self.color, self.brightness)
-        for i in range(self.num_pixels):
+        for i in range(self.start, self.end + 1):
             self.pixels[i] = scaled
 
         # Update brightness

@@ -3,22 +3,22 @@
 # Imports
 from hardware import Pin, factory
 from utils import rand_color
-from strip import Strip, RGBW_BPP, TIM_800
+from strip import Strip, Segment, RGBW_BPP, TIM_800
 from controller import Controller
 
 # Effects imports
 from effects.solid import SolidEffect
 from effects.fade import FadeEffect
-from effects.sweep import SweepEffect
-from effects.wipe import WipeEffect
+# from effects.sweep import SweepEffect
+# from effects.wipe import WipeEffect
 from effects.wipe_solid import WipeSolidEffect
-from effects.wipe_inward import WipeInwardEffect
-from effects.rainbow_wipe import RainbowWipeEffect
-from effects.rainbow_cycle import RainbowCycleEffect
-from effects.bounce import BounceEffect
-from effects.sparkle import SparkleEffect
-from effects.wipe_random import WipeRandomEffect
-from effects.spectrum import SpectrumEffect
+# from effects.wipe_inward import WipeInwardEffect
+# from effects.rainbow_wipe import RainbowWipeEffect
+# from effects.rainbow_cycle import RainbowCycleEffect
+# from effects.bounce import BounceEffect
+# from effects.sparkle import SparkleEffect
+# from effects.wipe_random import WipeRandomEffect
+# from effects.spectrum import SpectrumEffect
 
 # Constants
 RGB_LED_TYPE = 0
@@ -46,10 +46,28 @@ crs_dv = Pin(27, Pin.OUT, value=0)
 emac_clk = Pin(0, Pin.OUT, value=0)
 
 # Create neopixel objects (Def timing = 800kHz)
-strip1 = Strip("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=False, rotation=90) #276
-strip2 = Strip("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=False) #480
-strip3 = Strip("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=False)
-strip4 = Strip("ch4", pin_num=4, num_leds=20, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=False) #432
+
+
+
+strip1 = Strip("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=True, rotation=90) #276
+
+segments = [
+    Segment(0, 10),
+    Segment(10, 15),
+    Segment(25, 10)
+]
+strip2 = Strip("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, segments=segments, enabled=True) #480
+
+segments = [
+    Segment(0, 20),
+    Segment(20, 10)
+]
+strip3 = Strip("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, segments=segments, enabled=True)
+
+segments = [
+    Segment(0, 10)
+]
+strip4 = Strip("ch4", pin_num=4, num_leds=20, bpp=RGBW_BPP, timing=TIM_800, segments=segments, enabled=True) #432
 
 (renderer, createTimer, createScheduler) = factory()
 
@@ -72,7 +90,7 @@ def main():
     controllers.append(Controller(strip4, scheduler=createScheduler()))
 
     for i in range(len(controllers)):
-        controllers[i].set_effect(FadeEffect(color_fn=lambda: rand_color(w=0)))
+        controllers[i].set_effect_fn(FadeEffect, color_fn=lambda: rand_color(w=0))
         controllers[i].start()
 
     # leds.set_effect(SolidEffect())

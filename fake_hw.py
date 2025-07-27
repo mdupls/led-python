@@ -134,7 +134,7 @@ class Renderer:
         # Set the geometry
         self.window.geometry(f'{window_width}x{window_height}+{x}+{y}')
         self.window.title(f"LED Python")
-        self.canvas = tk.Canvas(self.window, width=window_width, height=window_height, bg="black")
+        self.canvas = tk.Canvas(self.window, width=window_width, height=window_height, bg="gray")
         self.canvas.pack()
         self.strips = []
         self.padding = 20

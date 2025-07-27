@@ -2,8 +2,8 @@ from utils import OFF
 from effect import BaseEffect
 
 class WipeEffect(BaseEffect):
-    def __init__(self, color_fn=None, color=None):
-        super().__init__()
+    def __init__(self, segment, color_fn=None, color=None):
+        super().__init__(segment)
         self.color_fn = color_fn
         self.color = color if color is not None else color_fn()
 

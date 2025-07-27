@@ -12,7 +12,7 @@ class RainbowCycleEffect(BaseEffect):
         self.reset()
 
     def update(self):
-        for i in range(self.num_pixels):
+        for i in range(self.start, self.end + 1):
             # reverse the index
             j = i if self.reverse else self.num_pixels - i - 1
             self.pixels[i] = rainbow_colors[(j + self.step * self.direction) % len(rainbow_colors)]

@@ -5,9 +5,13 @@ OFF = (0, 0, 0, 0)
 DELAY = 0.05
 
 # Clear all LEDs
-def clear(strip):
-    for i in range(len(strip)):
-        strip[i] = OFF
+def clear(strip, start=None, stop=None):
+    if start is None or stop is None:
+        for i in range(len(strip)):
+            strip[i] = OFF
+    else:
+        for i in range(start, stop):
+            strip[i] = OFF
 
 def sleep(duration=DELAY):
     time.sleep(duration)

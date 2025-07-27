@@ -7,17 +7,34 @@ TIM_800 = 1 # 800kHz leds
 RGB_PIXELS = 1 # RGB, 1 led=1 pixel
 
 class Strip:
-    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, reverse=False, rotation=0, enabled=False):
+    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, segments=None, rotation=0, enabled=False):
         self.id = id
-        self.reverse = reverse
         self.enabled = enabled
         self.rotation = rotation
         self.pixels = NeoPixel(Pin(pin_num), num_leds, bpp=bpp, timing=timing)
-        
-        # # Could better insolate this from MicroPython NeoPixel scenarios
-        # # This is for testing purposes only on a desktop
-        # if self.pixels.window is not None:
-        #     self.pixels.setup_canvas(rotation)
+        if segments is None:
+            self.segments = [Segment(0, len(self.pixels))]
+        else:
+            self.segments = segments
+
+        self._validate_segments()
     
     def get_id(self):
         return self.id
+    
+    def _validate_segments(self):
+        for i in range(len(self.segments)):
+            segment = self.segments[i]
+            index = segment.start + segment.length - 1
+            if index >= len(self.pixels):
+                raise RuntimeError(f"Segment lengths are out of bounds: (start, length) ({segment.start}, {segment.length}) for pixel length: {len(self.pixels)}")
+
+class Segment:
+    def __init__(self, start, length, reverse=False, enabled=True):
+        self.start = start
+        self.length = length
+        self.reverse = reverse
+        self.enabled = enabled
+
+    def __len__(self):
+        return self.length

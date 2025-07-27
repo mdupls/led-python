@@ -2,17 +2,15 @@ from utils import clear, OFF
 from effect import BaseEffect
 
 class WipeSolidEffect(BaseEffect):
-    def __init__(self, color_fn=None, color=None):
-        super().__init__()
+    def __init__(self, pixels, segment, color_fn=None, color=None):
+        super().__init__(pixels, segment)
         self.color_fn = color_fn
         self.color = color
         self._reset = False
-
-    def initialize(self, strip):
-        super().initialize(strip)
-
         self.reset()
 
+        print(f"{self.start} {self.end}")
+        
     def reset(self):
         super().reset()
         if self.color_fn is not None:
@@ -20,15 +18,13 @@ class WipeSolidEffect(BaseEffect):
 
     def update(self):
         if self._reset:
-            clear(self.pixels)
+            clear(self.pixels, self.start, self.end + 1)
             self.reset()
             self._reset = False
 
         self.pixels[self.step] = self.color
 
-        # Move the LED
         self.step += self.direction
 
-        # Bounce off ends
-        if self.step < 0 or self.step == self.num_pixels:
+        if self.step <= self.start or self.step >= self.end:
             self._reset = True
