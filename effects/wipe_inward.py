@@ -34,7 +34,7 @@ class InwardWipeEffect(BaseEffect):
         self.pixels[self.left] = self.color
         self.pixels[self.right] = self.color
 
-        print(f"{self.segment}: (left, right) ({self.left}, {self.right})")
+        # print(f"{self.segment}: (left, right) ({self.left}, {self.right})")
 
         self.left += self.direction
         self.right -= self.direction

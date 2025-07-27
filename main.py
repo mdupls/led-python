@@ -87,9 +87,20 @@ def main():
     controllers.append(Controller(strip3, scheduler=createScheduler()))
     controllers.append(Controller(strip4, scheduler=createScheduler()))
 
-    for i in range(len(controllers)):
-        controllers[i].set_effect_fn(SweepEffect, color_fn=lambda: rand_color(w=0))
+    controllers[0].set_effect_fn(SolidWipeEffect, color_fn=lambda: rand_color(w=0))
+
+    controllers[1].set_effect_fn(SweepEffect, segment_index=0, color_fn=lambda: rand_color(w=0))
+    controllers[1].set_effect_fn(SolidEffect, segment_index=1, color=rand_color(w=0))
+    controllers[1].set_effect_fn(BounceEffect, segment_index=2, color_fn=lambda: rand_color(w=0))
+    
+    controllers[2].set_effect_fn(FadeEffect, segment_index=0, color_fn=lambda: rand_color(w=0))
+    controllers[2].set_effect_fn(SparkleEffect, segment_index=1, color=rand_color(w=0))
+    
+    controllers[3].set_effect_fn(InwardWipeEffect, segment_index=0, color_fn=lambda: rand_color(w=0))
         # controllers[i].set_effect_fn(SolidEffect, color=rand_color(w=0))
+
+    for i in range(len(controllers)):
+        controllers[i].start()
 
     # leds.set_effect(SolidEffect())
     # leds.set_effect(SolidEffect(color=rand_color(w=0)))

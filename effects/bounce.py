@@ -7,8 +7,8 @@ class BounceEffect(BaseEffect):
         self.color_fn = color_fn
         self.color = color
         self.direction = -1 if self.reverse else 1
+        self.step = self.end if self.reverse else self.start
         self._bounce = False
-        self.reset()
 
     def update(self):
         # keep track of the direction

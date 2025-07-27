@@ -1,8 +1,8 @@
 class Controller:
     def __init__(self, strip, scheduler):
         self.scheduler = scheduler
-        self.effects = []
         self.strip = strip
+        self.effects = [None] * len(self.strip.segments)
         self.speed_ms = 50
 
     def start(self):
@@ -15,7 +15,8 @@ class Controller:
         # Run current pattern
         for i in range(len(self.effects)):
             effect = self.effects[i]
-            effect.update()
+            if effect is not None:
+                effect.update()
 
         self.strip.pixels.write()
 
@@ -26,23 +27,12 @@ class Controller:
         self.stop()
         self.start()
 
-    def set_effect_fn(self, effect_fn, **kwargs):
-        delay = self.speed_ms
-        self.effects = []
-        for i in range(len(self.strip.segments)):
-            effect = effect_fn(self.strip.pixels, self.strip.segments[i], **kwargs)
-            segment_delay = effect.delay_ms()
-            if segment_delay is not None:
-                if segment_delay >= 0:
-                    if delay > 0:
-                        delay = min(delay, segment_delay)
-                elif segment_delay < 0:
-                    delay = segment_delay
-            self.effects.append(effect)
-
-        # A bit hacky, but attemping to handle effects that don't require timers such as solid colors
-        if delay < 0:
-            self.stop()
-            self._update() # Run once
+    def set_effect_fn(self, effect_fn, segment_index=None, **kwargs):
+        if segment_index is None:
+            self.effects = []
+            for i in range(len(self.strip.segments)):
+                effect = effect_fn(self.strip.pixels, self.strip.segments[i], **kwargs)
+                self.effects.append(effect)
         else:
-            self.set_speed(delay)
+            effect = effect_fn(self.strip.pixels, self.strip.segments[segment_index], **kwargs)
+            self.effects[segment_index] = effect
