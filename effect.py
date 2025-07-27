@@ -12,12 +12,8 @@ class BaseEffect:
     def update(self):
         raise NotImplementedError
     
-    def next_delay_ms(self) -> int:
-        """
-        Optional: Return delay until next update.
-        Default is fixed.
-        """
-        return 50
+    def delay_ms(self) -> int:
+        return None
     
     def clear(self):
         clear_util(self.pixels, self.start, self.end + 1)

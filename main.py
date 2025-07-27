@@ -89,8 +89,7 @@ def main():
 
     for i in range(len(controllers)):
         controllers[i].set_effect_fn(SweepEffect, color_fn=lambda: rand_color(w=0))
-        # controllers[i].set_effect_fn(SpectrumEffect)
-        controllers[i].start()
+        # controllers[i].set_effect_fn(SolidEffect, color=rand_color(w=0))
 
     # leds.set_effect(SolidEffect())
     # leds.set_effect(SolidEffect(color=rand_color(w=0)))

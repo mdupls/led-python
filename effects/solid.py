@@ -10,5 +10,5 @@ class SolidEffect(BaseEffect):
         for i in self.range():
             self.pixels[i] = self.color
 
-    def next_delay_ms(self) -> int:
+    def delay_ms(self) -> int:
         return -1 # No refresh needed, solid color effect does not change
