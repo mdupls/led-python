@@ -3,6 +3,7 @@ from effect import BaseEffect
 class RainbowWipeEffect(BaseEffect):
     def __init__(self, pixels, segment):
         super().__init__(pixels, segment)
+        self.direction = -1 if self.reverse else 1
         self.step = 0
 
     def update(self):

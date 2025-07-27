@@ -88,7 +88,7 @@ def main():
     controllers.append(Controller(strip4, scheduler=createScheduler()))
 
     for i in range(len(controllers)):
-        controllers[i].set_effect_fn(FadeEffect, color_fn=lambda: rand_color(w=0))
+        controllers[i].set_effect_fn(SweepEffect, color_fn=lambda: rand_color(w=0))
         # controllers[i].set_effect_fn(SpectrumEffect)
         controllers[i].start()
 

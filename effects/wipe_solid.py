@@ -6,11 +6,13 @@ class SolidWipeEffect(BaseEffect):
         super().__init__(pixels, segment)
         self.color_fn = color_fn
         self.color = color
+        self.direction = -1 if self.reverse else 1
         self._reset = False
         self.reset()
         
     def reset(self):
-        super().reset()
+        self.step = self.end if self.reverse else self.start
+        
         if self.color_fn is not None:
             self.color = self.color_fn()
 

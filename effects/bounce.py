@@ -6,6 +6,7 @@ class BounceEffect(BaseEffect):
         super().__init__(pixels, segment)
         self.color_fn = color_fn
         self.color = color
+        self.direction = -1 if self.reverse else 1
         self._bounce = False
         self.reset()
 

@@ -5,6 +5,7 @@ class RandomWipeEffect(BaseEffect):
     def __init__(self, pixels, segment, color_fn=None):
         super().__init__(pixels, segment)
         self.color_fn = color_fn
+        self.direction = -1 if self.reverse else 1
         self.reset()
 
     def update(self):

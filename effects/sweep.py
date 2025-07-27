@@ -6,6 +6,7 @@ class SweepEffect(BaseEffect):
         super().__init__(pixels, segment)
         self.color_fn = color_fn
         self.color = color
+        self.direction = -1 if self.reverse else 1
         self._reset = False
         self._clearing_pass = False
         self.reset()
@@ -21,13 +22,9 @@ class SweepEffect(BaseEffect):
             self._clearing_pass = not self._clearing_pass
             self._reset = False
 
-        direction = -1 if self.reverse else 1
-
         self.pixels[self.step] = OFF if self._clearing_pass else self.color
 
-        # Move the LED
-        self.step += direction
+        self.step += self.direction
 
-        # Bounce off ends
         if self.step < self.start or self.step > self.end:
             self._reset = True

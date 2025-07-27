@@ -8,10 +8,6 @@ class BaseEffect:
         self.end = self.start + segment.length - 1
         self.length = segment.length
         self.reverse = segment.reverse
-        self.direction = -1 if self.reverse else 1
-
-    def reset(self):
-        self.step = self.end if self.reverse else self.start
 
     def update(self):
         raise NotImplementedError
