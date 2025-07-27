@@ -1,16 +1,12 @@
-from utils import clear, OFF
+from utils import OFF
 from effect import BaseEffect
 
 class BounceEffect(BaseEffect):
-    def __init__(self, color_fn=None, color=None):
-        super().__init__()
+    def __init__(self, pixels, segment, color_fn=None, color=None):
+        super().__init__(pixels, segment)
         self.color_fn = color_fn
         self.color = color
         self._bounce = False
-
-    def initialize(self, strip):
-        super().initialize(strip)
-
         self.reset()
 
     def update(self):
@@ -18,13 +14,13 @@ class BounceEffect(BaseEffect):
         direction = self.direction
 
         if self.reverse:
-            if self.step == self.num_pixels - 1:
+            if self.step == self.end:
                 self._change_color()
         else:
-            if self.step == 0:
+            if self.step == self.start:
                 self._change_color()
 
-        self.pixels[(self.step - direction) % self.num_pixels] = OFF  # Clear previous pixel
+        self.pixels[self.range_mod(self.step - direction)] = OFF  # Clear previous pixel
         self.pixels[self.step] = self.color
 
         # if we bounced, reverse the direction
@@ -36,7 +32,7 @@ class BounceEffect(BaseEffect):
         self.step += self.direction
 
         # Bounce off ends
-        if self.step == 0 or self.step == self.num_pixels - 1:
+        if self.step == self.start or self.step == self.end:
             self._bounce = True
 
     def _change_color(self):

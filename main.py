@@ -9,16 +9,16 @@ from controller import Controller
 # Effects imports
 from effects.solid import SolidEffect
 from effects.fade import FadeEffect
-# from effects.sweep import SweepEffect
-# from effects.wipe import WipeEffect
-from effects.wipe_solid import WipeSolidEffect
-# from effects.wipe_inward import WipeInwardEffect
-# from effects.rainbow_wipe import RainbowWipeEffect
-# from effects.rainbow_cycle import RainbowCycleEffect
-# from effects.bounce import BounceEffect
-# from effects.sparkle import SparkleEffect
-# from effects.wipe_random import WipeRandomEffect
-# from effects.spectrum import SpectrumEffect
+from effects.sweep import SweepEffect
+from effects.wipe import WipeEffect
+from effects.wipe_solid import SolidWipeEffect
+from effects.wipe_inward import InwardWipeEffect
+from effects.wipe_rainbow import RainbowWipeEffect
+from effects.cycle_rainbow import RainbowCycleEffect
+from effects.bounce import BounceEffect
+from effects.sparkle import SparkleEffect
+from effects.wipe_random import RandomWipeEffect
+from effects.spectrum import SpectrumEffect
 
 # Constants
 RGB_LED_TYPE = 0
@@ -47,14 +47,12 @@ emac_clk = Pin(0, Pin.OUT, value=0)
 
 # Create neopixel objects (Def timing = 800kHz)
 
-
-
-strip1 = Strip("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=True, rotation=90) #276
+strip1 = Strip("ch1", pin_num=14, num_leds=50, bpp=RGBW_BPP, timing=TIM_800, enabled=True, reverse=True, rotation=90) #276
 
 segments = [
-    Segment(0, 10),
+    Segment(0, 10, reverse=True),
     Segment(10, 15),
-    Segment(25, 10)
+    Segment(25, 15)
 ]
 strip2 = Strip("ch2", pin_num=17, num_leds=40, bpp=RGBW_BPP, timing=TIM_800, segments=segments, enabled=True) #480
 
@@ -65,7 +63,7 @@ segments = [
 strip3 = Strip("ch3", pin_num=16, num_leds=30, bpp=RGBW_BPP, timing=TIM_800, segments=segments, enabled=True)
 
 segments = [
-    Segment(0, 10)
+    Segment(0, 20)
 ]
 strip4 = Strip("ch4", pin_num=4, num_leds=20, bpp=RGBW_BPP, timing=TIM_800, segments=segments, enabled=True) #432
 
@@ -91,6 +89,7 @@ def main():
 
     for i in range(len(controllers)):
         controllers[i].set_effect_fn(FadeEffect, color_fn=lambda: rand_color(w=0))
+        # controllers[i].set_effect_fn(SpectrumEffect)
         controllers[i].start()
 
     # leds.set_effect(SolidEffect())
@@ -101,13 +100,13 @@ def main():
     # leds.set_effect(SweepEffect(color_fn=lambda: rand_color(w=0)))
     # leds.set_effect(WipeEffect(color=rand_color(w=0)))
     # leds.set_effect(WipeEffect(color_fn=lambda: rand_color(w=0)))
-    # leds.set_effect(WipeRandomEffect(color_fn=lambda: rand_color(w=0)))
-    # leds.set_effect(WipeSolidEffect(color=rand_color(w=0)))
-    # leds.set_effect(WipeSolidEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(RandomWipeEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(SolidWipeEffect(color=rand_color(w=0)))
+    # leds.set_effect(SolidWipeEffect(color_fn=lambda: rand_color(w=0)))
     # leds.set_effect(RainbowWipeEffect())
     # leds.set_effect(RainbowCycleEffect())
-    # leds.set_effect(WipeInwardEffect(color=rand_color(w=0)))
-    # leds.set_effect(WipeInwardEffect(color_fn=lambda: rand_color(w=0)))
+    # leds.set_effect(InwardWipeEffect(color=rand_color(w=0)))
+    # leds.set_effect(InwardWipeEffect(color_fn=lambda: rand_color(w=0)))
     # leds.set_effect(BounceEffect(color=rand_color(w=0)))
     # leds.set_effect(BounceEffect(color_fn=lambda: rand_color(w=0)))
     # leds.set_effect(SparkleEffect(color=rand_color(w=0)))

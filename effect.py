@@ -1,3 +1,5 @@
+from utils import clear as clear_util, range_mod as range_mod_util
+
 class BaseEffect:
     def __init__(self, pixels, segment):
         self.pixels = pixels
@@ -20,4 +22,12 @@ class BaseEffect:
         Default is fixed.
         """
         return 50
-
+    
+    def clear(self):
+        clear_util(self.pixels, self.start, self.end + 1)
+    
+    def range_mod(self, value):
+        return range_mod_util(value, self.start, self.end + 1)
+    
+    def range(self):
+        return range(self.start, self.end + 1)

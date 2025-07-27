@@ -16,6 +16,9 @@ def clear(strip, start=None, stop=None):
 def sleep(duration=DELAY):
     time.sleep(duration)
 
+def range_mod(value, start, end):
+    return ((value - start) % (end - start)) + start
+
 def rand_color(w=None):
     r = randrange(0, 255)
     g = randrange(0, 255)

@@ -7,7 +7,7 @@ class SolidEffect(BaseEffect):
         self.color = color
 
     def update(self):
-        for i in range(self.start, self.end + 1):
+        for i in self.range():
             self.pixels[i] = self.color
 
     def next_delay_ms(self) -> int:

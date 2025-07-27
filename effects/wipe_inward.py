@@ -1,47 +1,46 @@
-from utils import clear, OFF
 from effect import BaseEffect
 
-class WipeInwardEffect(BaseEffect):
-    def __init__(self, color_fn=None, color=None, invert=False):
-        super().__init__()
+class InwardWipeEffect(BaseEffect):
+    def __init__(self, pixels, segment, color_fn=None, color=None, invert=False):
+        super().__init__(pixels, segment)
         self.color_fn = color_fn
         self.color = color
         self.invert = invert
+        self.direction = -1 if self.invert else 1
+        self._even = self.length % 2 == 0
         self._reset = False
-
-    def initialize(self, strip):
-        super().initialize(strip)
-        
         self.reset()
 
     def reset(self):
         if self.invert:
-            if self.num_pixels % 2 == 0:
-                self.right = self.num_pixels // 2
+            if self._even:
+                self.right = self.start + (self.length // 2)
                 self.left = self.right - 1
             else:
-                self.left = self.right = self.num_pixels // 2
+                self.left = self.right = self.start + (self.length // 2)
         else:
-            self.left = 0
-            self.right = self.num_pixels - 1
+            self.left = self.start
+            self.right = self.end
         
         if self.color_fn is not None:
             self.color = self.color_fn()
 
     def update(self):
         if self._reset:
-            clear(self.pixels)
+            self.clear()
             self.reset()
             self._reset = False
 
         self.pixels[self.left] = self.color
         self.pixels[self.right] = self.color
 
+        print(f"{self.segment}: (left, right) ({self.left}, {self.right})")
+
         self.left += self.direction
         self.right -= self.direction
 
         if self.invert:
-            if self.left < 0 or self.right >= self.num_pixels:
+            if self.left < self.start or self.right > self.end:
                 self._reset = True
         else:
             if self.left > self.right:

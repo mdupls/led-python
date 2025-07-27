@@ -7,13 +7,13 @@ TIM_800 = 1 # 800kHz leds
 RGB_PIXELS = 1 # RGB, 1 led=1 pixel
 
 class Strip:
-    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, segments=None, rotation=0, enabled=False):
+    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, segments=None, reverse=None, rotation=0, enabled=False):
         self.id = id
         self.enabled = enabled
         self.rotation = rotation
         self.pixels = NeoPixel(Pin(pin_num), num_leds, bpp=bpp, timing=timing)
         if segments is None:
-            self.segments = [Segment(0, len(self.pixels))]
+            self.segments = [Segment(0, len(self.pixels), reverse=reverse)]
         else:
             self.segments = segments
 
@@ -38,3 +38,6 @@ class Segment:
 
     def __len__(self):
         return self.length
+    
+    def __str__(self):
+        return f"Segment [{self.start}, {self.start + self.length - 1}]"

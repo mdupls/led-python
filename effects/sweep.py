@@ -2,20 +2,16 @@ from utils import OFF
 from effect import BaseEffect
 
 class SweepEffect(BaseEffect):
-    def __init__(self, color_fn=None, color=None):
-        super().__init__()
+    def __init__(self, pixels, segment, color_fn=None, color=None):
+        super().__init__(pixels, segment)
         self.color_fn = color_fn
         self.color = color
         self._reset = False
         self._clearing_pass = False
-
-    def initialize(self, strip):
-        super().initialize(strip)
-
         self.reset()
 
     def reset(self, new_color=True):
-        self.step = self.num_pixels - 1 if self.reverse else 0
+        self.step = self.end if self.reverse else self.start
         if new_color and self.color_fn is not None:
             self.color = self.color_fn()
 
@@ -33,5 +29,5 @@ class SweepEffect(BaseEffect):
         self.step += direction
 
         # Bounce off ends
-        if self.step < 0 or self.step == self.num_pixels:
+        if self.step < self.start or self.step > self.end:
             self._reset = True
