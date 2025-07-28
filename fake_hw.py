@@ -1,6 +1,6 @@
 # fake_hw.py
 
-from scheduler import Scheduler as SchedulerInterface, Timer as TimerInterface
+from runtime import Runtime as RuntimeInterface
 import tkinter as tk
 
 class Pin:
@@ -89,39 +89,13 @@ class NeoPixel:
             self.canvas.itemconfig(self.rects[i], fill=hex_color)
         # self.window.update()
 
-class Timer(TimerInterface):
-    def __init__(self, root):
-        self.root = root
-
-    def after(self, delay_ms, callback):
-        self.root.after(delay_ms, callback)
-    
-class Scheduler(SchedulerInterface):
-    def __init__(self, root, interval_ms):
-        self.root = root
-        self.interval_ms = interval_ms
-        self._job = None
-
-    def _tick(self, callback):
-        callback()
-        self._job = self.root.after(self.interval_ms, self._tick, callback)
-
-    def start(self, callback):
-        if self._job is None:
-            self._tick(callback)
-
-    def stop(self):
-        if self._job:
-            self.root.after_cancel(self._job)
-            self._job = None
-
-class Renderer:
+class Runtime(RuntimeInterface):
     def __init__(self):
         self.window = tk.Tk()
 
         # Set desired window size
         window_width = 1024
-        window_height = 600
+        window_height = 768
 
         # Get screen width and height
         screen_width = self.window.winfo_screenwidth()
@@ -144,10 +118,8 @@ class Renderer:
 
         strip.pixels.add_renderer(self, x + self.padding, y + self.padding, rotation=strip.rotation)
 
-def create_factory():
-    renderer = Renderer()
-    
-    createTimer = lambda: Timer(renderer.window)
-    createScheduler = lambda: Scheduler(renderer.window, 50)
+    def schedule_next(self, delay_ms, callback):
+        self.window.after(delay_ms, callback)
 
-    return renderer, createTimer, createScheduler
+    def run(self):
+        self.window.mainloop()

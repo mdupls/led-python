@@ -1,29 +1,28 @@
 # real_hw.py
 
-from machine import Pin, Timer
-from scheduler import Scheduler as SchedulerInterface, Timer as TimerInterface
+from machine import Pin
+import uasyncio as asyncio
+from runtime import Runtime as RuntimeInterface
 import neopixel
 
 # Direct pass-through:
 NeoPixel = neopixel.NeoPixel
 
-class Timer(TimerInterface):
-    def __init__(self, root):
-        self.root = root
+class Runtime(RuntimeInterface):
 
-    def after(self, delay_ms, callback):
-        self.root.after(delay_ms, callback)
+    def add(self, strip, x, y):
+        pass
 
-class Scheduler(SchedulerInterface):
-    def __init__(self):
-        self.timer = Timer(-1)
+    def schedule_next(self, delay_ms, callback):
+        asyncio.create_task(self._schedule(delay_ms, callback))
 
-    def after(self, interval_ms, callback):
-        self.timer.init(
-            period=interval_ms,
-            mode=Timer.PERIODIC,
-            callback=callback
-        )
+    async def _schedule(self, delay_ms, callback):
+        await asyncio.sleep_ms(delay_ms)
+        callback()
 
-    def stop(self):
-        self.timer.deinit()
+    def run(self):
+        asyncio.run(self._main())
+
+    async def _main(self):
+        while True:
+            await asyncio.sleep(1)  # Idle loop

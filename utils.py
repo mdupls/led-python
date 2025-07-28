@@ -1,8 +1,6 @@
-import time
 from random import randrange
 
 OFF = (0, 0, 0, 0)
-DELAY = 0.05
 
 # Clear all LEDs
 def clear(strip, start=None, stop=None):
@@ -12,9 +10,6 @@ def clear(strip, start=None, stop=None):
     else:
         for i in range(start, stop):
             strip[i] = OFF
-
-def sleep(duration=DELAY):
-    time.sleep(duration)
 
 def range_mod(value, start, end):
     return ((value - start) % (end - start)) + start
@@ -27,7 +22,7 @@ def rand_color(w=None):
         w = randrange(0, 128)
     else:
         w = 0
-    return  (r,g,b,w)
+    return (r,g,b,w)
 
 #Convert HSV to RGB (based on colorsys.py).
 def hsv_to_rgb(h, s, v, w):

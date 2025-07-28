@@ -1,17 +1,25 @@
 class Controller:
-    def __init__(self, strip, scheduler):
-        self.scheduler = scheduler
+    def __init__(self, strip, runtime):
+        self.runtime = runtime
         self.strip = strip
         self.effects = [None] * len(self.strip.segments)
         self.speed_ms = 50
+        self._stopped = True
 
     def start(self):
-        self.scheduler.start(self._update)
+        self._stopped = False
+        self.runtime.schedule_next(0, self._update)
 
     def stop(self):
-        self.scheduler.stop()
+        self._stopped = True
+
+    def _next(self):
+        self.runtime.schedule_next(self.speed_ms, self._update)
 
     def _update(self):
+        if self._stopped:
+            return
+        
         # Run current pattern
         for i in range(len(self.effects)):
             effect = self.effects[i]
@@ -19,13 +27,10 @@ class Controller:
                 effect.update()
 
         self.strip.pixels.write()
+        self._next()
 
     def set_speed(self, speed_ms):
         self.speed_ms = speed_ms
-        self.scheduler.interval_ms = speed_ms
-        # Restart timer to apply new period
-        self.stop()
-        self.start()
 
     def set_effect_fn(self, effect_fn, segment_index=None, **kwargs):
         if segment_index is None:

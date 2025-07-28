@@ -7,7 +7,7 @@ TIM_800 = 1 # 800kHz leds
 RGB_PIXELS = 1 # RGB, 1 led=1 pixel
 
 class Strip:
-    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, segments=None, reverse=None, rotation=0, enabled=False):
+    def __init__(self, id, pin_num, num_leds, bpp=3, timing=TIM_400, segments=None, reverse=False, rotation=0, enabled=False):
         self.id = id
         self.enabled = enabled
         self.rotation = rotation
@@ -16,8 +16,7 @@ class Strip:
             self.segments = [Segment(0, len(self.pixels), reverse=reverse)]
         else:
             self.segments = segments
-
-        self._validate_segments()
+            self._validate_segments()
     
     def get_id(self):
         return self.id
