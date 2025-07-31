@@ -13,7 +13,7 @@ class Strip:
         self.rotation = rotation
         self.pixels = NeoPixel(Pin(pin_num), num_leds, bpp=bpp, timing=timing)
         if segments is None:
-            self.segments = [Segment(0, len(self.pixels), reverse=reverse)]
+            self.segments = [Segment(0, num_leds, reverse=reverse)]
         else:
             self.segments = segments
             self._validate_segments()
