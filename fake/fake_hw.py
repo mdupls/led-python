@@ -2,6 +2,7 @@
 
 from runtime import Runtime as RuntimeInterface
 import tkinter as tk
+import time
 
 class Pin:
     OUT = "OUT"
@@ -40,20 +41,19 @@ class NeoPixel:
         
         # print(f"[MockNeoPixel] Created {n} pixels on pin {pin}")
 
-    def add_renderer(self, renderer, x, y, rotation=0):
+    def add_renderer(self, renderer, x, y, w, h, rotation=0):
         self.renderer = renderer
         self.window = renderer.window
         self.canvas = renderer.canvas
-        
-        size = 10
+        thick = 5
 
         if rotation == 90 or rotation == 270:
             rect_fn = lambda i: (
-                x, y + i * size, x + size, y + (i + 1) * size
+                x, y + i * h, x + w + thick, y + (i + 1) * h
             )
         elif rotation == 180 or rotation == 0:
             rect_fn = lambda i: (
-                x + i * size, y, x + (i + 1) * size, y + size
+                x + i * w, y, x + (i + 1) * w, y + h + thick
             )
 
         self.rects = []
@@ -63,7 +63,7 @@ class NeoPixel:
                 *rect_fn(i), fill="white", outline="black"
             )
             self.rects.append(rect)
-        # self.window.update()
+        self.window.update()
 
     def __setitem__(self, index, color):
         # print(f"[MockNeoPixel] Pixel {index} set to {color}")
@@ -87,15 +87,18 @@ class NeoPixel:
                 r = g = b = 0
             hex_color = f"#{r:02x}{g:02x}{b:02x}"
             self.canvas.itemconfig(self.rects[i], fill=hex_color)
-        # self.window.update()
+        self.window.update()
 
 class Runtime(RuntimeInterface):
     def __init__(self):
         self.window = tk.Tk()
 
         # Set desired window size
-        window_width = 1024
-        window_height = 768
+        window_width = 1400
+        window_height = 1000
+
+        self.window_width = window_width
+        self.window_height = window_height
 
         # Get screen width and height
         screen_width = self.window.winfo_screenwidth()
@@ -113,13 +116,46 @@ class Runtime(RuntimeInterface):
         self.strips = []
         self.padding = 20
 
-    def add(self, strip, x, y):
-        self.strips.append(strip)
+    def add(self, strips):
+        self.strips = strips
 
-        strip.pixels.add_renderer(self, x + self.padding, y + self.padding, rotation=strip.rotation)
+        window_width = self.window_width - self.padding * 3
+        window_height = self.window_height - self.padding * 2
+
+        x = 0
+        y = 0
+
+        w = 10000
+        h = 10000
+        for i in range(len(strips)):
+            strip = strips[i]
+            rotation = strip.rotation
+
+            if rotation == 90 or rotation == 270:
+                h = min(h, window_height / len(strip.pixels))
+                w = min(w, h)
+            elif rotation == 180 or rotation == 0:
+                w = min(w, window_width / len(strip.pixels))
+                h = min(h, w)
+
+        w = min(w, h)
+        h = w
+            
+        for i in range(len(strips)):
+            strip = strips[i]
+            strip.pixels.add_renderer(self, x + self.padding * (2 if i > 0 else 1), y + self.padding * (i if i > 0 else 1), w, h, rotation=strip.rotation)
 
     def schedule_next(self, delay_ms, callback):
         self.window.after(delay_ms, callback)
 
     def run(self):
         self.window.mainloop()
+
+class T:
+    def ticks_ms(self):
+        return time.perf_counter()
+    
+    def ticks_diff(self, end, start):
+        return end - start
+    
+t = T()

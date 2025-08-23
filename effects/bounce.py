@@ -1,4 +1,4 @@
-from utils import OFF
+from utils import clear, OFF
 from effect import BaseEffect
 
 class BounceEffect(BaseEffect):
@@ -9,33 +9,36 @@ class BounceEffect(BaseEffect):
         self.direction = -1 if self.reverse else 1
         self.step = self.end if self.reverse else self.start
         self._bounce = False
+        self.speed = int(segment.length / 16)
 
     def update(self):
-        # keep track of the direction
+        step = self.step
         direction = self.direction
+        start = self.start
+        end = self.end
+        reverse = self.reverse
 
-        if self.reverse:
-            if self.step == self.end:
-                self._change_color()
-        else:
-            if self.step == self.start:
-                self._change_color()
+        # Check for color change at ends
+        if (reverse and step == end) or (not reverse and step == start):
+            if self.color_fn is not None:
+                self.color = self.color_fn()
 
-        self.pixels[self.range_mod(self.step - direction)] = OFF  # Clear previous pixel
-        self.pixels[self.step] = self.color
+        # Clear previous pixel
+        # self.pixels[self.range_mod(step - direction)] = OFF
+        clear(self.pixels, start, end + 1)
 
-        # if we bounced, reverse the direction
+        # Set current pixel
+        self.pixels[step] = self.color
+
+        # Bounce logic
         if self._bounce:
-            self.direction *= -1
+            self.direction = -direction
             self._bounce = False
 
-        # Move the LED
-        self.step += self.direction
+        # Move step
+        step += self.direction * self.speed
+        self.step = step % (self.end + 1)
 
-        # Bounce off ends
-        if self.step == self.start or self.step == self.end:
+        # Check if at boundary
+        if step == start or step == end:
             self._bounce = True
-
-    def _change_color(self):
-        if self.color_fn is not None:
-            self.color = self.color_fn()

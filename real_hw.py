@@ -4,13 +4,14 @@ from machine import Pin
 import uasyncio as asyncio
 from runtime import Runtime as RuntimeInterface
 import neopixel
+import utime as t
 
 # Direct pass-through:
 NeoPixel = neopixel.NeoPixel
 
 class Runtime(RuntimeInterface):
 
-    def add(self, strip, x, y):
+    def add(self, strips):
         pass
 
     def schedule_next(self, delay_ms, callback):

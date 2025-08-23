@@ -6,5 +6,5 @@ class Runtime:
     def run(self):
         raise NotImplementedError()
     
-    def add(self, strip, x, y):
+    def add(self, strips):
         raise NotImplementedError()

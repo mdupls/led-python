@@ -3,13 +3,13 @@ from random import randrange
 OFF = (0, 0, 0, 0)
 
 # Clear all LEDs
-def clear(strip, start=None, stop=None):
+def clear(pixels, start=None, stop=None):
     if start is None or stop is None:
-        for i in range(len(strip)):
-            strip[i] = OFF
+        for i in range(len(pixels)):
+            pixels[i] = OFF
     else:
         for i in range(start, stop):
-            strip[i] = OFF
+            pixels[i] = OFF
 
 def range_mod(value, start, end):
     return ((value - start) % (end - start)) + start
